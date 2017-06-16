@@ -1,0 +1,55 @@
+<html>
+  <head>
+    <meta charset="UTF-8"/>
+    <title>Hello World</title>
+    <script src="https://unpkg.com/react@latest/dist/react.js"></script>
+    <script src="https://unpkg.com/react-dom@latest/dist/react-dom.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+
+      class ListOfWords extends React.PureComponent {
+        render () {
+          return <div>{this.props.words.join(',')}</div>
+        }
+      }
+
+      class WordAdder extends React.Component {
+        constructor (props) {
+          super(props);
+          this.state = {
+            words: ['marklar']
+          };
+          this.handleClick = this.handleClick.bind(this)
+        }
+
+        handleClick () {
+          const words = this.state.words;
+          words.concat(['marklar']);
+          this.setState({words: words});
+          this.setState(prevState => ({
+            words: prevState.words.concat(['new-item'])
+//            words: prevState.words.push('new-item')
+          }));
+        }
+
+        render () {
+          return (
+                  <div>
+                    <button onClick={this.handleClick}/>
+                    <ListOfWords words={this.state.words}/>
+                  </div>
+          )
+        }
+      }
+
+      ReactDOM.render(
+              <WordAdder/>,
+        document.getElementById('root')
+      );
+
+    </script>
+  </body>
+</html>

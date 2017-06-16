@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>组件</title>
+    <script src="https://unpkg.com/react@latest/dist/react.js"></script>
+    <script src="https://unpkg.com/react-dom@latest/dist/react-dom.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+
+      function Welcome (props) {
+        return <h1>Hello,{props.name}</h1>;
+      }
+
+      //      const element = <Welcome name="Sara"/>
+      //      ReactDOM.render(element, document.getElementById('root'))
+
+      function App () {
+        return (
+                <div>
+                  <Welcome name="Sara"/>
+                  <Welcome name="Cahal"/>
+                  <Welcome name="Edite"/>
+                </div>
+        )
+      }
+
+      ReactDOM.render(
+              <App/>,
+        document.getElementById('root')
+      )
+
+    </script>
+  </body>
+</html>
