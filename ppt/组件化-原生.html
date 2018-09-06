@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+  </head>
+
+
+  <body>
+    <div class='wrapper'>
+      <button class='status-btn'>
+        <span class='status-text'>上架</span>
+      </button>
+    </div>
+  </body>
+  <script>
+    const button = document.querySelector('.status-btn');
+    const buttonText = button.querySelector('.status-text');
+    let isApproved = false;
+    button.addEventListener('click', () => {
+      isApproved = !isApproved;
+      if (isApproved) {
+        buttonText.innerHTML = '下架';
+      } else {
+        buttonText.innerHTML = '上架';
+      }
+    }, false);
+
+
+  </script>
+
+
+<div id="example">
+  <button @click="update()">{{ state }}</button>
+</div>
+
+
+</html>

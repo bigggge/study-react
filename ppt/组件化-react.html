@@ -1,0 +1,42 @@
+<html>
+  <head>
+    <meta charset="UTF-8"/>
+    <title>Hello World</title>
+    <script src="https://unpkg.com/react@latest/dist/react.js"></script>
+    <script src="https://unpkg.com/react-dom@latest/dist/react-dom.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+      class ToggleButton extends React.Component {
+        constructor (props) {
+          super(props);
+          this.state = {isApproved: false}
+        }
+
+        handleClick = () => {
+          console.log(this)
+
+          this.setState(prevState => ({
+            isApproved: !prevState.isApproved
+          }))
+        }
+
+        render () {
+          return (
+                  <button onClick={this.handleClick}>
+                    {this.state.isApproved ? '下架' : '上架'}
+                  </button>
+          )
+        }
+      }
+
+      ReactDOM.render(
+              <ToggleButton/>,
+        document.getElementById('root')
+      );
+
+    </script>
+  </body>
+</html>

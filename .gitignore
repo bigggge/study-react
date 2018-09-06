@@ -23,3 +23,7 @@ typings/
 *.tgz
 .yarn-integrity
 .env
+.idea
+.cache
+.vscode
+
