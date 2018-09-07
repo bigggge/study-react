@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+  </head>
+  <body>
+    <div id="out"
+         style="position:absolute;background-color: rgb(178,34,34);width: 100px;height: 100px;z-index: 3">
+
+    </div>
+
+    <div id="in"
+         style="position:absolute;top:30px;background-color: blue;width: 100px;height: 100px;z-index: 2">
+    </div>
+
+
+    <script>
+
+      document.getElementById('out').onclick = function(e) {
+        alert('out');
+        console.log(e);
+      };
+
+      document.getElementById('in').onclick = function(e) {
+        e.stopPropagation();
+        alert('in');
+        console.log('in', e);
+      };
+
+      function click(e) {
+        console.log(e);
+        alert(6);
+//        e.stopPropagation();
+//        alert(6);
+      }
+    </script>
+  </body>
+</html>

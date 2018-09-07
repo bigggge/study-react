@@ -77,22 +77,36 @@ parcelRequire = (function (modules, cache, entry) {
 
   // Override the current require with this new one
   return newRequire;
-})({3:[function(require,module,exports) {
+})({4:[function(require,module,exports) {
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+exports.applyMiddleware = applyMiddleware;
 /**
  * light-redux.js
  *
  * @author bigggge
  * 2018/3/14.
  */
-var createStore = function createStore(reducer, initialState) {
-  if (initialState === undefined) {
-    throw new Error('[light-redux] initialState is undefined');
+var createStore = function createStore(reducer, initialState, enhancer) {
+  if (typeof initialState === 'function' && typeof enhancer === 'undefined') {
+    enhancer = initialState;
+    initialState = undefined;
   }
+
+  if (typeof enhancer !== 'undefined') {
+    if (typeof enhancer !== 'function') {
+      throw new Error('Expected the enhancer to be a function.');
+    }
+
+    return enhancer(createStore(reducer, initialState));
+  }
+
   var store = {};
   store.state = initialState;
   store.listeners = [];
@@ -113,25 +127,82 @@ var createStore = function createStore(reducer, initialState) {
   return store;
 };
 
+// 中间件机制
+// Redux middleware 提供了一个分类处理 action 的机会。在 middleware 中，
+// 我们可以检阅每一个流过的 action,并挑选出特定类型的 action 进行相应操作，以此来改变 action。
+
+// 中间件示例
+// const logger = ({ dispatch, getState }) => action => {
+//   console.log(action, getState());
+//   return dispatch(action);
+// };
+// export default logger;
+
+function applyMiddleware(middleware) {
+  return function (store) {
+
+    return _extends({}, store, {
+      dispatch: middleware({
+        getPrevState: store.getState,
+        dispatch: store.dispatch
+      })
+    });
+  };
+}
+
 exports.default = createStore;
-},{}],4:[function(require,module,exports) {
+},{}],5:[function(require,module,exports) {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+function createThunkMiddleware(extraArgument) {
+  return function (_ref) {
+    var dispatch = _ref.dispatch,
+        getState = _ref.getState;
+    return function (next) {
+      return function (action) {
+        if (typeof action === 'function') {
+          return action(dispatch, getState, extraArgument);
+        }
+
+        return next(action);
+      };
+    };
+  };
+}
+
+var thunk = createThunkMiddleware();
+thunk.withExtraArgument = createThunkMiddleware;
+
+exports.default = thunk;
+},{}],3:[function(require,module,exports) {
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.counter = counter;
+exports.incrementAsync = incrementAsync;
 
 var _lightRedux = require('./light-redux');
 
 var _lightRedux2 = _interopRequireDefault(_lightRedux);
+
+var _reduxThunk = require('redux-thunk');
+
+var _reduxThunk2 = _interopRequireDefault(_reduxThunk);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var INCREMENT = 'INCREMENT';
 var DECREMENT = 'DECREMENT';
 
-function counter(state, action) {
+function counter() {
+  var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 0;
+  var action = arguments[1];
+
   switch (action.type) {
     case INCREMENT:
       return state + 1;
@@ -142,7 +213,15 @@ function counter(state, action) {
   }
 }
 
-var store = (0, _lightRedux2.default)(counter, 0);
+function incrementAsync() {
+  return function (dispatch) {
+    setTimeout(function () {
+      dispatch({ type: 'INCREMENT' });
+    }, 2000);
+  };
+}
+
+var store = (0, _lightRedux2.default)(counter, 0, (0, _lightRedux.applyMiddleware)(_reduxThunk2.default));
 var init = store.getState();
 
 console.log('light-redux init ' + init);
@@ -157,7 +236,8 @@ store.dispatch({ type: 'INCREMENT' });
 store.dispatch({ type: 'INCREMENT' });
 store.dispatch({ type: 'DECREMENT' });
 store.dispatch({ type: 'DECREMENT' });
-},{"./light-redux":3}],5:[function(require,module,exports) {
+store.dispatch(incrementAsync());
+},{"./light-redux":4,"redux-thunk":5}],6:[function(require,module,exports) {
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -212,9 +292,11 @@ function _render(vnode) {
     // 渲染组件（函数）
   }
 
+  // 渲染组件
   if (typeof vnode.tag === 'function') {
     var component = createComponent(vnode.tag, vnode.attrs);
     setComponentProps(component, vnode.attrs);
+    renderComponent(component);
     return component.element;
   }
 
@@ -235,6 +317,7 @@ function _render(vnode) {
   return dom;
 }
 
+// 设置属性
 function setAttribute(dom, name, value) {
   console.log(' [React] setAttribute dom,name,value', dom, name, value);
 
@@ -318,7 +401,6 @@ function setComponentProps(component, props) {
     }
   }
   component.props = props;
-  renderComponent(component);
 }
 
 function renderComponent(component) {
@@ -357,6 +439,21 @@ var React = {
 };
 
 exports.default = React;
+},{}],11:[function(require,module,exports) {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var logger = function logger(_ref) {
+  var dispatch = _ref.dispatch,
+      getPrevState = _ref.getPrevState;
+  return function (action) {
+    console.log('[Redux-logger] ', action, getPrevState());
+    return dispatch(action);
+  };
+};
+exports.default = logger;
 },{}],2:[function(require,module,exports) {
 'use strict';
 
@@ -372,6 +469,10 @@ var _react = require('../../light-react/lib/react');
 
 var _react2 = _interopRequireDefault(_react);
 
+var _lightReduxLogger = require('./lib/light-redux-logger');
+
+var _lightReduxLogger2 = _interopRequireDefault(_lightReduxLogger);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -380,7 +481,7 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var store = (0, _lightRedux2.default)(_lightRedux3.counter, 0);
+var store = (0, _lightRedux2.default)(_lightRedux3.counter, 0, (0, _lightRedux.applyMiddleware)(_lightReduxLogger2.default));
 
 var App = function (_React$Component) {
   _inherits(App, _React$Component);
@@ -423,6 +524,13 @@ var App = function (_React$Component) {
               return store.dispatch({ type: 'DECREMENT' });
             } },
           'decrement'
+        ),
+        _react2.default.createElement(
+          'button',
+          { onClick: function onClick() {
+              return store.dispatch((0, _lightRedux3.incrementAsync)());
+            } },
+          'increment async'
         )
       );
     }
@@ -438,7 +546,7 @@ function render() {
 render();
 
 store.subscribe(render);
-},{"./lib/light-redux":3,"./lib/light-redux.test":4,"../../light-react/lib/react":5}],6:[function(require,module,exports) {
+},{"./lib/light-redux":4,"./lib/light-redux.test":3,"../../light-react/lib/react":6,"./lib/light-redux-logger":11}],7:[function(require,module,exports) {
 
 var OVERLAY_ID = '__parcel__error__overlay__';
 
@@ -468,7 +576,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = '' || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + '59143' + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + '64198' + '/');
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
 
@@ -607,5 +715,5 @@ function hmrAccept(bundle, id) {
     return hmrAccept(global.parcelRequire, id);
   });
 }
-},{}]},{},[6,2])
+},{}]},{},[7,2])
 //# sourceMappingURL=/index-0.aa2681a3.map

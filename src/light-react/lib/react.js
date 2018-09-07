@@ -34,9 +34,11 @@ function _render(vnode) {
     // 渲染组件（函数）
   }
 
+  // 渲染组件
   if (typeof vnode.tag === 'function') {
     const component = createComponent(vnode.tag, vnode.attrs);
     setComponentProps(component, vnode.attrs);
+    renderComponent(component);
     return component.element;
   }
 
@@ -55,6 +57,7 @@ function _render(vnode) {
   return dom;
 }
 
+// 设置属性
 function setAttribute(dom, name, value) {
   console.log(' [React] setAttribute dom,name,value', dom, name, value);
 
@@ -131,7 +134,6 @@ function setComponentProps(component, props) {
     }
   }
   component.props = props;
-  renderComponent(component);
 }
 
 export function renderComponent(component) {

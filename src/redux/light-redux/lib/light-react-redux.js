@@ -21,8 +21,10 @@ export class Provider extends React.Component {
   }
 }
 
+// hoc
 export const connect = (mapStateToProps = state => state, mapDispatchToProps = {}) => WrapComponent => {
-  return class ConnectComponent extends React.Component {
+  class WithConnect extends React.Component {
+
     static contextTypes = {
       store: PropTypes.object
     };
@@ -68,4 +70,13 @@ export const connect = (mapStateToProps = state => state, mapDispatchToProps = {
       return <WrapComponent {...this.state.allProps} />;
     }
   };
+
+  WithConnect.displayName = `HOC_WithConnect(${getDisplayName(WrapComponent)})`;
+
+  return WithConnect;
+
 };
+
+function getDisplayName(WrappedComponent) {
+  return WrappedComponent.displayName || WrappedComponent.name || 'Component';
+}

@@ -83,6 +83,10 @@ parcelRequire = (function (modules, cache, entry) {
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+
+var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
+
+exports.applyMiddleware = applyMiddleware;
 /**
  * light-redux.js
  *
@@ -113,7 +117,59 @@ var createStore = function createStore(reducer, initialState) {
   return store;
 };
 
+function applyMiddleware(middleware) {
+  return function (createStore) {
+    return function () {
+      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+        args[_key] = arguments[_key];
+      }
+
+      var store = createStore.apply(undefined, args);
+      var _dispatch = store.dispatch;
+
+      var midApi = {
+        getState: store.getState,
+        dispatch: function dispatch() {
+          return _dispatch.apply(undefined, arguments);
+        }
+      };
+
+      _dispatch = middleware(midApi)(store.dispatch);
+
+      return _extends({}, store, {
+        dispatch: _dispatch
+      });
+    };
+  };
+}
+
 exports.default = createStore;
+},{}],235:[function(require,module,exports) {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+function createThunkMiddleware(extraArgument) {
+  return function (_ref) {
+    var dispatch = _ref.dispatch,
+        getState = _ref.getState;
+    return function (next) {
+      return function (action) {
+        if (typeof action === 'function') {
+          return action(dispatch, getState, extraArgument);
+        }
+
+        return next(action);
+      };
+    };
+  };
+}
+
+var thunk = createThunkMiddleware();
+thunk.withExtraArgument = createThunkMiddleware;
+
+exports.default = thunk;
 },{}],5:[function(require,module,exports) {
 'use strict';
 
@@ -121,10 +177,15 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.counter = counter;
+exports.incrementAsync = incrementAsync;
 
 var _lightRedux = require('./light-redux');
 
 var _lightRedux2 = _interopRequireDefault(_lightRedux);
+
+var _reduxThunk = require('redux-thunk');
+
+var _reduxThunk2 = _interopRequireDefault(_reduxThunk);
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -142,7 +203,15 @@ function counter(state, action) {
   }
 }
 
-var store = (0, _lightRedux2.default)(counter, 0);
+function incrementAsync() {
+  return function (dispatch) {
+    setTimeout(function () {
+      dispatch({ type: 'INCREMENT' });
+    }, 2000);
+  };
+}
+
+var store = (0, _lightRedux2.default)(counter, 0, (0, _lightRedux.applyMiddleware)(_reduxThunk2.default));
 var init = store.getState();
 
 console.log('light-redux init ' + init);
@@ -157,7 +226,8 @@ store.dispatch({ type: 'INCREMENT' });
 store.dispatch({ type: 'INCREMENT' });
 store.dispatch({ type: 'DECREMENT' });
 store.dispatch({ type: 'DECREMENT' });
-},{"./light-redux":4}],100:[function(require,module,exports) {
+store.dispatch(incrementAsync());
+},{"./light-redux":4,"redux-thunk":235}],100:[function(require,module,exports) {
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -21220,6 +21290,9 @@ var Provider = exports.Provider = function (_React$Component) {
   return Provider;
 }(_react2.default.Component);
 
+// hoc
+
+
 Provider.childContextTypes = {
   store: _propTypes2.default.object
 };
@@ -21229,15 +21302,13 @@ var connect = exports.connect = function connect() {
   };
   var mapDispatchToProps = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
   return function (WrapComponent) {
-    var _class, _temp;
+    var WithConnect = function (_React$Component2) {
+      _inherits(WithConnect, _React$Component2);
 
-    return _temp = _class = function (_React$Component2) {
-      _inherits(ConnectComponent, _React$Component2);
+      function WithConnect(props) {
+        _classCallCheck(this, WithConnect);
 
-      function ConnectComponent(props) {
-        _classCallCheck(this, ConnectComponent);
-
-        var _this2 = _possibleConstructorReturn(this, (ConnectComponent.__proto__ || Object.getPrototypeOf(ConnectComponent)).call(this, props));
+        var _this2 = _possibleConstructorReturn(this, (WithConnect.__proto__ || Object.getPrototypeOf(WithConnect)).call(this, props));
 
         _this2.state = {
           allProps: {}
@@ -21245,7 +21316,7 @@ var connect = exports.connect = function connect() {
         return _this2;
       }
 
-      _createClass(ConnectComponent, [{
+      _createClass(WithConnect, [{
         key: 'componentDidMount',
         value: function componentDidMount() {
           var _this3 = this;
@@ -21287,12 +21358,23 @@ var connect = exports.connect = function connect() {
         }
       }]);
 
-      return ConnectComponent;
-    }(_react2.default.Component), _class.contextTypes = {
+      return WithConnect;
+    }(_react2.default.Component);
+
+    WithConnect.contextTypes = {
       store: _propTypes2.default.object
-    }, _temp;
+    };
+    ;
+
+    WithConnect.displayName = 'HOC_WithConnect(' + getDisplayName(WrapComponent) + ')';
+
+    return WithConnect;
   };
 };
+
+function getDisplayName(WrappedComponent) {
+  return WrappedComponent.displayName || WrappedComponent.name || 'Component';
+}
 },{"react":8,"prop-types":16}],2:[function(require,module,exports) {
 'use strict';
 
@@ -21393,7 +21475,7 @@ _reactDom2.default.render(_react2.default.createElement(
   { store: store },
   _react2.default.createElement(App, null)
 ), document.getElementById('root'));
-},{"./lib/light-redux":4,"./lib/light-redux.test":5,"react-dom":7,"react":8,"./lib/light-react-redux":6}],231:[function(require,module,exports) {
+},{"./lib/light-redux":4,"./lib/light-redux.test":5,"react-dom":7,"react":8,"./lib/light-react-redux":6}],236:[function(require,module,exports) {
 
 var OVERLAY_ID = '__parcel__error__overlay__';
 
@@ -21562,5 +21644,5 @@ function hmrAccept(bundle, id) {
     return hmrAccept(global.parcelRequire, id);
   });
 }
-},{}]},{},[231,2])
+},{}]},{},[236,2])
 //# sourceMappingURL=/light-redux.d96d303d.map

@@ -429,6 +429,17 @@ react@^15.6.2:
     object-assign "^4.1.0"
     prop-types "^15.5.10"
 
+redux-thunk@^2.3.0:
+  version "2.3.0"
+  resolved "http://registry.npm.taobao.org/redux-thunk/download/redux-thunk-2.3.0.tgz#51c2c19a185ed5187aaa9a2d08b666d0d6467622"
+
+redux@^4.0.0:
+  version "4.0.0"
+  resolved "http://registry.fe.yeshj.com/redux/download/redux-4.0.0.tgz#aa698a92b729315d22b34a0553d7e6533555cc03"
+  dependencies:
+    loose-envify "^1.1.0"
+    symbol-observable "^1.2.0"
+
 regenerator-runtime@^0.11.0:
   version "0.11.1"
   resolved "http://registry.npm.taobao.org/regenerator-runtime/download/regenerator-runtime-0.11.1.tgz#be05ad7f9bf7d22e056f9726cee5017fbf19e2e9"
@@ -474,6 +485,10 @@ strip-ansi@^3.0.0:
 supports-color@^2.0.0:
   version "2.0.0"
   resolved "http://registry.npm.taobao.org/supports-color/download/supports-color-2.0.0.tgz#535d045ce6b6363fa40117084629995e9df324c7"
+
+symbol-observable@^1.2.0:
+  version "1.2.0"
+  resolved "http://registry.fe.yeshj.com/symbol-observable/download/symbol-observable-1.2.0.tgz#c22688aed4eab3cdc2dfeacbb561660560a00804"
 
 to-fast-properties@^1.0.3:
   version "1.0.3"
