@@ -5,6 +5,10 @@
  * 2018/9/3.
  */
 
+function log() {
+  // console.log(arguments)
+}
+
 function createElement(tag, attrs, ...children) {
   return {
     tag,
@@ -18,7 +22,7 @@ function render(vnode, container) {
 }
 
 function _render(vnode) {
-  console.log(' [React] _render vnode', vnode);
+  log(' [React] _render vnode', vnode);
 
   if (vnode === null || vnode === undefined) {
     vnode = '';
@@ -58,8 +62,8 @@ function _render(vnode) {
 }
 
 // 设置属性
-function setAttribute(dom, name, value) {
-  console.log(' [React] setAttribute dom,name,value', dom, name, value);
+export function setAttribute(dom, name, value) {
+  log(' [React] setAttribute dom,name,value', dom, name, value);
 
   if (name === 'className') name = 'class';
 
@@ -90,6 +94,7 @@ function setAttribute(dom, name, value) {
 
 }
 
+// Component
 class Component {
   constructor(props = {}) {
     this.state = {};
@@ -97,7 +102,7 @@ class Component {
   }
 
   setState(stateChange) {
-    console.log(' [React] setState stateChange', stateChange);
+    log(' [React] setState stateChange', stateChange);
 
     Object.assign(this.state, stateChange);
     // 渲染组件
@@ -106,8 +111,8 @@ class Component {
 }
 
 // 创建组件
-function createComponent(component, props) {
-  console.log(' [React] createComponent component,props', component, props);
+export function createComponent(component, props) {
+  log(' [React] createComponent component,props', component, props);
 
   let inst;
   // 如果是类组件，直接返回实例
@@ -124,8 +129,9 @@ function createComponent(component, props) {
   return inst;
 }
 
-function setComponentProps(component, props) {
-  console.log(' [React] setComponentProps component,props', component, props);
+// 更新 props
+export function setComponentProps(component, props) {
+  log(' [React] setComponentProps component,props', component, props);
   if (!component.element) {
     if (component.componentWillMount) {
       component.componentWillMount();
@@ -137,15 +143,16 @@ function setComponentProps(component, props) {
 }
 
 export function renderComponent(component) {
-  console.log(' [React] renderComponent component', component);
+  log(' [React] renderComponent component', component);
 
   let element;
 
   const vnode = component.render();
-  if (component.element && component.componentDidUpdate) {
+  if (component.element && component.componentWillUpdate) {
     component.componentWillUpdate();
   }
   element = _render(vnode);
+  // element = diff(component.element, vnode);
 
   if (component.element) {
     if (component.componentDidMount) {
@@ -160,6 +167,7 @@ export function renderComponent(component) {
   }
 
   component.element = element;
+  element._component = component;
 }
 
 const React = {

@@ -1,4 +1,4 @@
-import createStore, { applyMiddleware } from './light-redux';
+import createStore, { applyMiddlewares } from './light-redux';
 import thunk from 'redux-thunk';
 
 const INCREMENT = 'INCREMENT';
@@ -16,26 +16,27 @@ export function counter(state = 0, action) {
 }
 
 export function incrementAsync() {
-  return dispatch => {
+  return (dispatch) => {
     setTimeout(() => {
       dispatch({ type: 'INCREMENT' });
     }, 2000);
   };
 }
 
-const store = createStore(counter, 0, applyMiddleware(thunk));
-const init = store.getState();
+function init() {
 
-console.log(`light-redux init ${init}`);
+  const store = createStore(counter, 0, applyMiddlewares(thunk));
+  const init = store.getState();
 
-function listener() {
-  const current = store.getState();
-  console.log(`current ${current}`);
+  function listener() {
+    const current = store.getState();
+    console.log(`current ${current}`);
+  }
+
+  store.subscribe(listener);
+  store.dispatch({ type: 'INCREMENT' });
+  store.dispatch({ type: 'INCREMENT' });
+  store.dispatch({ type: 'DECREMENT' });
+  store.dispatch({ type: 'DECREMENT' });
+  store.dispatch(incrementAsync());
 }
-
-store.subscribe(listener);
-store.dispatch({ type: 'INCREMENT' });
-store.dispatch({ type: 'INCREMENT' });
-store.dispatch({ type: 'DECREMENT' });
-store.dispatch({ type: 'DECREMENT' });
-store.dispatch(incrementAsync());

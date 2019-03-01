@@ -35,15 +35,6 @@ class Page1 extends Component {
   //   console.log('page1 UNSAFE_componentWillMount');
   // }
 
-  // 在组件被装配后立即调用, 该方法里设置状态将会触发重渲。
-  // 这里普遍的误解是，在 componentWillMount 里获取数据可以避免渲染空的状态。
-  // 在实际中，这从来都是不对的，因为 react 总是在 componentWillMount 之后立即执行 render。
-  // 如果数据在 componentWillMount 调用的时候还不可用，那么第一次 render 也仍然显示加载状态，而不管你在哪里获取数据。
-  // 这就是为什么在绝大多数情况下，将数据获取移到 componentDidMount 是感受不到差别的。
-  componentDidMount() {
-    console.log('page1 componentDidMount');
-  }
-
   // 你可能想知道为什么我们不简单地将先前的 props 作为参数传递给 getDerivedStateFromProps。
   // 我们在设计API时考虑过这个问题，但因为两点原因推翻这个想法：
   // 1. prevProps 参数在第一次调用 getDerivedStateFromProps (实例化后)时会是 null。
@@ -54,6 +45,15 @@ class Page1 extends Component {
   static getDerivedStateFromProps(nextProps, prevState) {
     console.log('page1 getDerivedStateFromProps', nextProps, prevState);
     return null;
+  }
+
+  // 在组件被装配后立即调用, 该方法里设置状态将会触发重渲。
+  // 这里普遍的误解是，在 componentWillMount 里获取数据可以避免渲染空的状态。
+  // 在实际中，这从来都是不对的，因为 react 总是在 componentWillMount 之后立即执行 render。
+  // 如果数据在 componentWillMount 调用的时候还不可用，那么第一次 render 也仍然显示加载状态，而不管你在哪里获取数据。
+  // 这就是为什么在绝大多数情况下，将数据获取移到 componentDidMount 是感受不到差别的。
+  componentDidMount() {
+    console.log('page1 componentDidMount');
   }
 
   // UNSAFE_componentWillReceiveProps(nextProps) {

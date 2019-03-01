@@ -77,7 +77,7 @@ parcelRequire = (function (modules, cache, entry) {
 
   // Override the current require with this new one
   return newRequire;
-})({4:[function(require,module,exports) {
+})({3:[function(require,module,exports) {
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -87,11 +87,21 @@ Object.defineProperty(exports, "__esModule", {
 var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
 
 exports.applyMiddleware = applyMiddleware;
+exports.applyMiddlewares = applyMiddlewares;
 /**
  * light-redux.js
  *
  * @author bigggge
  * 2018/3/14.
+ */
+/**
+ * createStore
+ * 创建一个 redux store
+ *
+ * @param reducer      返回下一状态的函数
+ * @param initialState 初始状态
+ * @param enhancer     使用 applyMiddlewares 包装后的中间件函数
+ * @return store
  */
 var createStore = function createStore(reducer, initialState, enhancer) {
   if (typeof initialState === 'function' && typeof enhancer === 'undefined') {
@@ -99,11 +109,8 @@ var createStore = function createStore(reducer, initialState, enhancer) {
     initialState = undefined;
   }
 
-  if (typeof enhancer !== 'undefined') {
-    if (typeof enhancer !== 'function') {
-      throw new Error('Expected the enhancer to be a function.');
-    }
-
+  // middlewares
+  if (enhancer) {
     return enhancer(createStore(reducer, initialState));
   }
 
@@ -131,7 +138,7 @@ var createStore = function createStore(reducer, initialState, enhancer) {
 // Redux middleware 提供了一个分类处理 action 的机会。在 middleware 中，
 // 我们可以检阅每一个流过的 action,并挑选出特定类型的 action 进行相应操作，以此来改变 action。
 
-// 中间件示例
+// 中间件示例 (返回 dispatch)
 // const logger = ({ dispatch, getState }) => action => {
 //   console.log(action, getState());
 //   return dispatch(action);
@@ -140,18 +147,75 @@ var createStore = function createStore(reducer, initialState, enhancer) {
 
 function applyMiddleware(middleware) {
   return function (store) {
+    var dispatch = middleware({
+      getPrevState: store.getState,
+      dispatch: store.dispatch
+    });
 
     return _extends({}, store, {
-      dispatch: middleware({
-        getPrevState: store.getState,
-        dispatch: store.dispatch
-      })
+      dispatch: dispatch
     });
   };
 }
 
+/**
+ * 支持多个中间件
+ * @param middlewares
+ * @return {function(*)}
+ */
+// const logger = ({ dispatch, getPrevState }) => next => action => {
+//   console.log('[redux-logger] ', action, getPrevState());
+//   return next(action);
+// };
+function applyMiddlewares() {
+  for (var _len = arguments.length, middlewares = Array(_len), _key = 0; _key < _len; _key++) {
+    middlewares[_key] = arguments[_key];
+  }
+
+  return function (store) {
+    console.log('applyMiddlewares', middlewares);
+
+    var _dispatch = function dispatch() {};
+
+    var middlewareAPI = {
+      getPrevState: store.getState,
+      dispatch: function dispatch(action) {
+        return _dispatch(action);
+      }
+    };
+
+    var middlewareChain = middlewares.map(function (middleware) {
+      return middleware(middlewareAPI);
+    });
+
+    _dispatch = compose(middlewareChain)(store.dispatch);
+
+    return _extends({}, store, {
+      dispatch: _dispatch
+    });
+  };
+}
+
+/**
+ * compose
+ *
+ * @param fns [fn1, fn2]
+ * @return {*}
+ */
+// dispatch = f1(f2(f3(store.dispatch))))
+function compose(fns) {
+  if (fns.length === 1) {
+    return fns[0];
+  }
+  return fns.reduce(function (ret, middleware) {
+    return function (dispatch) {
+      return ret(middleware(dispatch));
+    };
+  });
+}
+
 exports.default = createStore;
-},{}],5:[function(require,module,exports) {
+},{}],8:[function(require,module,exports) {
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -177,7 +241,7 @@ var thunk = createThunkMiddleware();
 thunk.withExtraArgument = createThunkMiddleware;
 
 exports.default = thunk;
-},{}],3:[function(require,module,exports) {
+},{}],4:[function(require,module,exports) {
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -221,23 +285,24 @@ function incrementAsync() {
   };
 }
 
-var store = (0, _lightRedux2.default)(counter, 0, (0, _lightRedux.applyMiddleware)(_reduxThunk2.default));
-var init = store.getState();
+function init() {
 
-console.log('light-redux init ' + init);
+  var store = (0, _lightRedux2.default)(counter, 0, (0, _lightRedux.applyMiddlewares)(_reduxThunk2.default));
+  var init = store.getState();
 
-function listener() {
-  var current = store.getState();
-  console.log('current ' + current);
+  function listener() {
+    var current = store.getState();
+    console.log('current ' + current);
+  }
+
+  store.subscribe(listener);
+  store.dispatch({ type: 'INCREMENT' });
+  store.dispatch({ type: 'INCREMENT' });
+  store.dispatch({ type: 'DECREMENT' });
+  store.dispatch({ type: 'DECREMENT' });
+  store.dispatch(incrementAsync());
 }
-
-store.subscribe(listener);
-store.dispatch({ type: 'INCREMENT' });
-store.dispatch({ type: 'INCREMENT' });
-store.dispatch({ type: 'DECREMENT' });
-store.dispatch({ type: 'DECREMENT' });
-store.dispatch(incrementAsync());
-},{"./light-redux":4,"redux-thunk":5}],6:[function(require,module,exports) {
+},{"./light-redux":3,"redux-thunk":8}],7:[function(require,module,exports) {
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -248,6 +313,9 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
+exports.setAttribute = setAttribute;
+exports.createComponent = createComponent;
+exports.setComponentProps = setComponentProps;
 exports.renderComponent = renderComponent;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -258,6 +326,10 @@ function _classCallCheck(instance, Constructor) { if (!(instance instanceof Cons
  * @author bigggge(me@haoduoyu.cc)
  * 2018/9/3.
  */
+
+function log() {
+  // console.log(arguments)
+}
 
 function createElement(tag, attrs) {
   for (var _len = arguments.length, children = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
@@ -276,7 +348,7 @@ function _render2(vnode, container) {
 }
 
 function _render(vnode) {
-  console.log(' [React] _render vnode', vnode);
+  log(' [React] _render vnode', vnode);
 
   if (vnode === null || vnode === undefined) {
     vnode = '';
@@ -319,7 +391,7 @@ function _render(vnode) {
 
 // 设置属性
 function setAttribute(dom, name, value) {
-  console.log(' [React] setAttribute dom,name,value', dom, name, value);
+  log(' [React] setAttribute dom,name,value', dom, name, value);
 
   if (name === 'className') name = 'class';
 
@@ -346,6 +418,8 @@ function setAttribute(dom, name, value) {
   }
 }
 
+// Component
+
 var Component = function () {
   function Component() {
     var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
@@ -359,7 +433,7 @@ var Component = function () {
   _createClass(Component, [{
     key: 'setState',
     value: function setState(stateChange) {
-      console.log(' [React] setState stateChange', stateChange);
+      log(' [React] setState stateChange', stateChange);
 
       Object.assign(this.state, stateChange);
       // 渲染组件
@@ -374,7 +448,7 @@ var Component = function () {
 
 
 function createComponent(component, props) {
-  console.log(' [React] createComponent component,props', component, props);
+  log(' [React] createComponent component,props', component, props);
 
   var inst = void 0;
   // 如果是类组件，直接返回实例
@@ -391,8 +465,9 @@ function createComponent(component, props) {
   return inst;
 }
 
+// 更新 props
 function setComponentProps(component, props) {
-  console.log(' [React] setComponentProps component,props', component, props);
+  log(' [React] setComponentProps component,props', component, props);
   if (!component.element) {
     if (component.componentWillMount) {
       component.componentWillMount();
@@ -404,15 +479,16 @@ function setComponentProps(component, props) {
 }
 
 function renderComponent(component) {
-  console.log(' [React] renderComponent component', component);
+  log(' [React] renderComponent component', component);
 
   var element = void 0;
 
   var vnode = component.render();
-  if (component.element && component.componentDidUpdate) {
+  if (component.element && component.componentWillUpdate) {
     component.componentWillUpdate();
   }
   element = _render(vnode);
+  // element = diff(component.element, vnode);
 
   if (component.element) {
     if (component.componentDidMount) {
@@ -427,6 +503,7 @@ function renderComponent(component) {
   }
 
   component.element = element;
+  element._component = component;
 }
 
 var React = {
@@ -439,7 +516,7 @@ var React = {
 };
 
 exports.default = React;
-},{}],11:[function(require,module,exports) {
+},{}],5:[function(require,module,exports) {
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -448,12 +525,47 @@ Object.defineProperty(exports, "__esModule", {
 var logger = function logger(_ref) {
   var dispatch = _ref.dispatch,
       getPrevState = _ref.getPrevState;
-  return function (action) {
-    console.log('[Redux-logger] ', action, getPrevState());
-    return dispatch(action);
+  return function (nextDispatch) {
+    return function (action) {
+
+      console.log('[redux-logger] %c prev state', 'color:gray', getPrevState());
+      console.log('[redux-logger]', action);
+      var next = nextDispatch(action);
+      console.log('[redux-logger] %c next state', 'color:cornflowerblue', getPrevState());
+      return next;
+    };
   };
 };
+
 exports.default = logger;
+
+// const logger = ({ dispatch, getPrevState }) => action => {
+//   console.log(action, getPrevState());
+//   return dispatch(action);
+// };
+//
+// export default logger;
+},{}],6:[function(require,module,exports) {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+var thunk = function thunk(_ref) {
+  var dispatch = _ref.dispatch,
+      getPrevState = _ref.getPrevState;
+  return function (nextDispatch) {
+    return function (action) {
+      if (typeof action === 'function') {
+        return action(dispatch, getPrevState);
+      }
+
+      return nextDispatch(action);
+    };
+  };
+};
+
+exports.default = thunk;
 },{}],2:[function(require,module,exports) {
 'use strict';
 
@@ -473,6 +585,10 @@ var _lightReduxLogger = require('./lib/light-redux-logger');
 
 var _lightReduxLogger2 = _interopRequireDefault(_lightReduxLogger);
 
+var _lightReduxThunk = require('./lib/light-redux-thunk');
+
+var _lightReduxThunk2 = _interopRequireDefault(_lightReduxThunk);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -481,7 +597,8 @@ function _possibleConstructorReturn(self, call) { if (!self) { throw new Referen
 
 function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-var store = (0, _lightRedux2.default)(_lightRedux3.counter, 0, (0, _lightRedux.applyMiddleware)(_lightReduxLogger2.default));
+// const store0 = createStore(counter, 0, applyMiddleware(logger));
+var store = (0, _lightRedux2.default)(_lightRedux3.counter, 0, (0, _lightRedux.applyMiddlewares)(_lightReduxThunk2.default, _lightReduxLogger2.default));
 
 var App = function (_React$Component) {
   _inherits(App, _React$Component);
@@ -514,7 +631,7 @@ var App = function (_React$Component) {
         _react2.default.createElement(
           'button',
           { onClick: function onClick() {
-              return store.dispatch({ type: 'INCREMENT' });
+              store.dispatch({ type: 'INCREMENT' });
             } },
           'increment'
         ),
@@ -546,7 +663,7 @@ function render() {
 render();
 
 store.subscribe(render);
-},{"./lib/light-redux":4,"./lib/light-redux.test":3,"../../light-react/lib/react":6,"./lib/light-redux-logger":11}],7:[function(require,module,exports) {
+},{"./lib/light-redux":3,"./lib/light-redux.test":4,"../../light-react/lib/react":7,"./lib/light-redux-logger":5,"./lib/light-redux-thunk":6}],9:[function(require,module,exports) {
 
 var OVERLAY_ID = '__parcel__error__overlay__';
 
@@ -576,7 +693,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = '' || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + '64198' + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + '64676' + '/');
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
 
@@ -715,5 +832,5 @@ function hmrAccept(bundle, id) {
     return hmrAccept(global.parcelRequire, id);
   });
 }
-},{}]},{},[7,2])
+},{}]},{},[9,2])
 //# sourceMappingURL=/index-0.aa2681a3.map

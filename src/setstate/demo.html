@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>setState</title>
+    <script src="https://unpkg.com/react@latest/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@latest/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+
+      class App extends React.Component {
+        state = { val: 0 };
+
+        componentDidMount() {
+          this.setState({ val: this.state.val + 1 });
+          console.log(this.state.val);
+
+          this.setState({ val: this.state.val + 1 });
+          console.log(this.state.val);
+
+          setTimeout(_ => {
+            this.setState({ val: this.state.val + 1 });
+            console.log(this.state.val);
+
+            this.setState({ val: this.state.val + 1 });
+            console.log(this.state.val);
+          }, 0);
+        }
+
+        render() {
+          return <div>{this.state.val}</div>;
+        }
+      }
+
+      ReactDOM.render(
+              <App />,
+        document.getElementById('root')
+      );
+
+    </script>
+  </body>
+</html>

@@ -77,7 +77,189 @@ parcelRequire = (function (modules, cache, entry) {
 
   // Override the current require with this new one
   return newRequire;
-})({3:[function(require,module,exports) {
+})({7:[function(require,module,exports) {
+'use strict';
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.diff = diff;
+
+var _react = require('./react');
+
+function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } } /**
+                                                                                                                                                                                                     * diff.js
+                                                                                                                                                                                                     *
+                                                                                                                                                                                                     * @author bigggge(me@haoduoyu.cc)
+                                                                                                                                                                                                     * 2018/9/5.
+                                                                                                                                                                                                     */
+
+// https://github.com/hujiulong/blog/issues
+
+/**
+ *
+ * @param dom 真实DOM
+ * @param vnode 虚拟DOM
+ * @return 更新后的DOM
+ */
+function diff(dom, vnode) {
+  var newDom = void 0;
+
+  // 对比文本节点
+  if (typeof vnode === 'string') {
+    // 存在文本节点则更新
+    if (dom && dom.nodeType === 3) {
+      if (dom.textContent !== vnode) {
+        dom.textContent = vnode;
+      }
+      // 否则创建新文本节点
+    } else {
+      newDom = document.createTextNode(vnode);
+      if (dom && dom.parentNode) {
+        dom.parentNode.replaceChild(newDom, dom);
+      }
+    }
+    return newDom;
+  }
+
+  // diff component
+  if (typeof vnode.tag === 'function') {
+    return diffComponent(dom, vnode);
+  }
+
+  // 非文本节点，如果 DOM 不存在或新旧 DOM 类型不同，就新建一个节点
+  if (!dom || dom.nodeName.toLowerCase() !== vnode.tag.toLowerCase()) {
+    newDom = document.createElement(vnode.tag);
+    if (dom) {
+      [].concat(_toConsumableArray(dom.childNodes)).map(newDom.appendChild);
+      if (dom.parentNode) {
+        dom.parentNode.replaceChild(newDom, dom);
+      }
+    }
+  }
+
+  // 对比子节点
+  if (vnode.children && vnode.children.length > 0 || newDom.childNodes && newDom.childNodes.length > 0) {
+    diffChildren(newDom, vnode.children);
+  }
+
+  diffAttributes(newDom, vnode);
+
+  return newDom;
+}
+
+function diffAttributes(dom, vnode) {
+  var old = {};
+  var attrs = vnode.attrs;
+
+  for (var i = 0; i < dom.attributes.length; i++) {
+    var attr = dom.attributes[i];
+    old[attr.name] = attr.value;
+  }
+
+  // 移除不存在属性
+  for (var name in old) {
+    if (!(name in attrs)) {
+      (0, _react.setAttribute)(dom, name, undefined);
+    }
+  }
+
+  // 更新属性值
+  for (var _name in attrs) {
+    if (old[_name] !== attrs[_name]) {
+      (0, _react.setAttribute)(dom, _name, attrs[_name]);
+    }
+  }
+}
+
+// 对比子节点
+function diffChildren(dom, vchildren) {
+  var domChildren = dom.childNodes;
+  var children = [];
+
+  var keyed = {};
+
+  if (domChildren.length > 0) {
+    for (var i = 0; i < domChildren.length; i++) {
+      var child = domChildren[i];
+      var key = child.key;
+      if (key) {
+        keyed[key] = child;
+      } else {
+        children.push(child);
+      }
+    }
+  }
+
+  if (vchildren && vchildren.length > 0) {
+    var min = 0;
+    var childrenLen = children.length;
+    for (var _i = 0; _i < vchildren.length; _i++) {
+      var vchild = vchildren[_i];
+      var _key = vchild.key;
+      var _child = void 0;
+
+      if (_key) {
+        if (keyed[_key]) {
+          _child = keyed[_key];
+          keyed[_key] = undefined;
+        }
+      } else if (min < childrenLen) {
+        for (var j = min; j < childrenLen; j++) {
+          var c = children[j];
+          if (c && isSameNodeType(c, vchild)) {
+            _child = c;
+            children[j] = undefined;
+
+            if (j === childrenLen - 1) childrenLen--;
+            if (j === min) min++;
+            break;
+          }
+        }
+      }
+    }
+  }
+}
+
+function diffComponent(dom, vnode) {
+  var c = dom && dom._component;
+  var oldDom = dom;
+
+  if (c && c.constructor === vnode.tag) {
+    (0, _react.setComponentProps)(c, vnode.attrs);
+    dom = c.element;
+  } else {
+    if (c) {
+      unmountComponent(c);
+      oldDom = null;
+    }
+    c = (0, _react.createComponent)(vnode.tag, vnode.attrs);
+
+    (0, _react.setComponentProps)(c, vnode.attrs);
+    dom = c.element;
+    if (oldDom && dom !== oldDom) {
+      oldDom._component = null;
+      removeNode(oldDom);
+    }
+  }
+  return dom;
+}
+
+function unmountComponent(component) {
+  if (component.componentWillUnmount()) component.componentWillUnmount();
+  removeNode(component.element);
+}
+
+function isSameNodeType(dom, vnode) {
+  return true;
+}
+
+function removeNode(dom) {
+  if (dom && dom.parentNode) {
+    dom.parentNode.removeChild(dom);
+  }
+}
+},{"./react":3}],3:[function(require,module,exports) {
 'use strict';
 
 Object.defineProperty(exports, "__esModule", {
@@ -88,22 +270,26 @@ var _createClass = function () { function defineProperties(target, props) { for 
 
 var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
 
+exports.setAttribute = setAttribute;
+exports.createComponent = createComponent;
+exports.setComponentProps = setComponentProps;
 exports.renderComponent = renderComponent;
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+var _diff = require('./diff');
 
-/**
- * react.js
- *
- * @author bigggge(me@haoduoyu.cc)
- * 2018/9/3.
- */
+function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } } /**
+                                                                                                                                                           * react.js
+                                                                                                                                                           *
+                                                                                                                                                           * @author bigggge(me@haoduoyu.cc)
+                                                                                                                                                           * 2018/9/3.
+                                                                                                                                                           */
 
 function createElement(tag, attrs) {
   for (var _len = arguments.length, children = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
     children[_key - 2] = arguments[_key];
   }
 
+  console.log('createElement', arguments);
   return {
     tag: tag,
     attrs: attrs,
@@ -111,12 +297,17 @@ function createElement(tag, attrs) {
   };
 }
 
-function _render2(vnode, container) {
+function render(vnode, container) {
+  container.innerHTML = '';
   return container.appendChild(_render(vnode));
 }
 
 function _render(vnode) {
   console.log(' [React] _render vnode', vnode);
+
+  if (vnode === null || vnode === undefined) {
+    vnode = '';
+  }
 
   if (typeof vnode === 'number') {
     vnode = String(vnode);
@@ -128,9 +319,11 @@ function _render(vnode) {
     // 渲染组件（函数）
   }
 
+  // 渲染组件
   if (typeof vnode.tag === 'function') {
     var component = createComponent(vnode.tag, vnode.attrs);
     setComponentProps(component, vnode.attrs);
+    renderComponent(component);
     return component.element;
   }
 
@@ -145,12 +338,13 @@ function _render(vnode) {
 
   if (vnode.children) {
     vnode.children.forEach(function (child) {
-      return _render2(child, dom);
+      return render(child, dom);
     });
   }
   return dom;
 }
 
+// 设置属性
 function setAttribute(dom, name, value) {
   console.log(' [React] setAttribute dom,name,value', dom, name, value);
 
@@ -178,6 +372,8 @@ function setAttribute(dom, name, value) {
     }
   }
 }
+
+// Component
 
 var Component = function () {
   function Component() {
@@ -224,6 +420,7 @@ function createComponent(component, props) {
   return inst;
 }
 
+// 更新 props
 function setComponentProps(component, props) {
   console.log(' [React] setComponentProps component,props', component, props);
   if (!component.element) {
@@ -234,7 +431,6 @@ function setComponentProps(component, props) {
     }
   }
   component.props = props;
-  renderComponent(component);
 }
 
 function renderComponent(component) {
@@ -243,10 +439,11 @@ function renderComponent(component) {
   var element = void 0;
 
   var vnode = component.render();
-  if (component.element && component.componentDidUpdate) {
+  if (component.element && component.componentWillUpdate) {
     component.componentWillUpdate();
   }
-  element = _render(vnode);
+  // element = _render(vnode);
+  element = (0, _diff.diff)(component.element, vnode);
 
   if (component.element) {
     if (component.componentDidMount) {
@@ -261,19 +458,17 @@ function renderComponent(component) {
   }
 
   component.element = element;
+  element._component = component;
 }
 
 var React = {
   createElement: createElement,
-  render: function render(vnode, container) {
-    container.innerHTML = '';
-    return _render2(vnode, container);
-  },
+  render: render,
   Component: Component
 };
 
 exports.default = React;
-},{}],2:[function(require,module,exports) {
+},{"./diff":7}],2:[function(require,module,exports) {
 'use strict';
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
@@ -337,6 +532,7 @@ var Counter = function (_React$Component) {
   }, {
     key: 'onClick',
     value: function onClick() {
+      console.log('>>>', this);
       this.setState({ num: this.state.num + 1 });
     }
   }, {
@@ -346,9 +542,7 @@ var Counter = function (_React$Component) {
 
       return _react2.default.createElement(
         'div',
-        { onClick: function onClick() {
-            return _this2.onClick();
-          } },
+        null,
         _react2.default.createElement(
           'h1',
           null,
@@ -357,7 +551,9 @@ var Counter = function (_React$Component) {
         ),
         _react2.default.createElement(
           'button',
-          null,
+          { onClick: function onClick() {
+              return _this2.onClick();
+            } },
           'add'
         )
       );
@@ -413,7 +609,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = '' || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + '54143' + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + '55105' + '/');
   ws.onmessage = function (event) {
     var data = JSON.parse(event.data);
 

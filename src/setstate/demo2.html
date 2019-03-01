@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <title>setState 2</title>
+    <script src="https://unpkg.com/react@latest/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@latest/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="text/babel">
+
+      class App extends React.Component {
+        constructor() {
+          super(...arguments);
+
+          this.onClick = this.onClick.bind(this);
+          this.onClickLater = this.onClickLater.bind(this);
+
+          this.state = {
+            count: 0
+          };
+        }
+
+        onClick() {
+          this.setState({count: this.state.count + 1});
+          console.log('# this.state', this.state);
+        }
+
+        onClickLater() {
+          setTimeout(() => {
+            this.onClick();
+          });
+        }
+
+        componentDidMount() {
+          document.querySelector('#btn-raw').addEventListener('click', this.onClick);
+        }
+
+        render() {
+          console.log('#enter render');
+          return (
+                  <div>
+                    <div>{this.state.count}
+                      <button onClick={this.onClick}>Increment</button>
+                      <button id="btn-raw">Increment Raw</button>
+                      <button onClick={this.onClickLater}>Increment Later</button>
+                    </div>
+                  </div>
+          )
+        }
+      }
+
+      ReactDOM.render(
+              <App />,
+        document.getElementById('root')
+      );
+
+    </script>
+  </body>
+</html>

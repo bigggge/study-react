@@ -3,8 +3,8 @@
   <head>
     <meta charset="UTF-8">
     <title>事件处理</title>
-    <script src="https://unpkg.com/react@latest/dist/react.js"></script>
-    <script src="https://unpkg.com/react-dom@latest/dist/react-dom.js"></script>
+    <script src="https://unpkg.com/react@latest/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@latest/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
   </head>
   <body>
@@ -12,9 +12,9 @@
     <script type="text/babel">
 
       class Toggle extends React.Component {
-        constructor (props) {
+        constructor(props) {
           super(props);
-          this.state = {isToggleOn: true}
+          this.state = { isToggleOn: true };
 
           // 你必须谨慎对待 JSX 回调函数中的 this，类的方法默认是不会绑定 this 的。
           // 如果你忘记绑定 this.handleClick 并把它传入 onClick,
@@ -28,23 +28,39 @@
 //          }))
 //        }
 
-        handleClick () {
+        handleClick() {
           this.setState(prevState => ({
             isToggleOn: !prevState.isToggleOn
-          }))
+          }));
         }
 
-        render () {
+        test() {
+          console.log(this);
+          console.log('test');
+        }
+
+        render() {
           return (
-                  <button onClick={this.handleClick}>
-                    {this.state.isToggleOn ? 'ON' : 'OFF'}
-                  </button>
-          )
+                  <div>
+                    <button onClick={this.handleClick}>
+                      {this.state.isToggleOn ? 'ON' : 'OFF'}
+                    </button>
+                    <button onClick={(e) => console.log('>>>', this)}>test1</button>
+                    <button onClick={function(e) {
+                      console.log('>>>');
+                    }}>test11
+                    </button>
+                    <button onClick={console.log('>>>', this)}>test2</button>
+                    <button onClick={() => this.test()}>test3</button>
+                    <button onClick={this.test}>test4</button>
+                    <button onClick={this.test()}>test5</button>
+                  </div>
+          );
         }
       }
 
       ReactDOM.render(
-              <Toggle/>,
+              <Toggle />,
         document.getElementById('root')
       );
 

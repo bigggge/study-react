@@ -32,14 +32,16 @@ class Counter extends React.Component {
   }
 
   onClick() {
+    console.log('>>>', this);
     this.setState({ num: this.state.num + 1 });
   }
 
   render() {
     return (
-      <div onClick={() => this.onClick()}>
+      <div>
         <h1>number:{this.state.num}</h1>
-        <button>add</button>
+        <button onClick={() => this.onClick()}>add</button>
+        {/*<button onClick={this.onClick()}>add2</button>*/}
       </div>
     );
   }

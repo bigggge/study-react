@@ -1,17 +1,98 @@
 <html>
   <head>
-    <meta charset="UTF-8"/>
+    <meta charset="UTF-8" />
     <title>Hello World</title>
-    <script src="https://unpkg.com/react@latest/dist/react.js"></script>
-    <script src="https://unpkg.com/react-dom@latest/dist/react-dom.js"></script>
+    <script src="https://unpkg.com/react@latest/umd/react.development.js"></script>
+    <script src="https://unpkg.com/react-dom@latest/umd/react-dom.development.js"></script>
     <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
   </head>
   <body>
     <div id="root"></div>
     <script type="text/babel">
 
+      class BaseComponent extends React.Component {
+        componentDidMount() {
+          alert('base componentDidMount');
+        }
+      }
+
+      class TextBox extends BaseComponent {
+        state = {
+          val: ''
+        };
+
+        componentDidMount() {
+          super.componentDidMount();
+          alert('my componentDidMount');
+        }
+
+        render() {
+          return (<div>
+            <div>You typed: {this.state.val}</div>
+          </div>);
+        }
+      }
+
+      function iiHOC(WrappedComponent) {
+        return class extends WrappedComponent {
+          componentWillMount() {
+            console.log('in will -------------->');
+            if (super.componentWillMount) {
+              super.componentWillMount();
+            }
+          }
+
+          render() {
+            console.log('in render -------------->');
+//            if (this.props.loggedIn) {
+//              console.log('loggedIn -------------->');
+            return super.render();
+//            } else {
+//              return null;
+//            }
+          }
+        };
+      }
+
+      function format(a) {
+        return a + '!';
+      }
+
+      class Test extends React.Component {
+        render() {
+          let x = { ...{ a: 1 } };
+          console.log(this.props.xxx);
+          return [
+            <div>{this.props.children}</div>
+//            <div>123{JSON.stringify({ ...{ a: 2 } })}</div>,
+//            <div>123{x.a}</div>,
+//            <div>123{format(x)}</div>,
+//            <div>123{ {...{a:1}} }</div>,
+          ];
+        }
+      }
+
+      let I = iiHOC(Test);
+
+      class App extends React.Component {
+        state = {
+          a: {
+            a: 1
+          },
+          b: [
+            { a: 1 }
+          ]
+        };
+
+        render() {
+          return <div>
+            {this.state.b.map(item => (<Test xxx={{...{a:11}}}>123</Test>))}
+          </div>;
+        }
+      }
+
       ReactDOM.render(
-              <h1>Hello, world!</h1>,
+        <App />,
         document.getElementById('root')
       );
 
